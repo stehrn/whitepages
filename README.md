@@ -16,8 +16,8 @@
       * maintainability
       * extensibility
       * ease of development
-    * What would alternative design look like, which is better
-    * Code up a few classes and methods (50 - 200 lines of code)
+   * What would alternative design look like, which is better
+   * Code up a few classes and methods (50 - 200 lines of code)
 
 # Initial thoughts on the problem
 Some initial thoughts, literally, in no particular order
@@ -321,8 +321,8 @@ I've picked nginx here, there are alternatives (e.g. Apache, Jetty), everything 
      So, for example, call to `/white-pages/v1/?name=Stehr` will be cached after 1st call, with nginx delivering cached value for requests to same end-point.
 
 ### Other approaches
-Availability and Resiliency patterns can be implemented in code via Java API such as https://github.com/resilience4j/resilience4j.
-Many app frameworks support these features as well, e.g. virt.x https://vertx.io/docs/vertx-circuit-breaker/java/
+Availability and Resiliency patterns can be implemented in code via Java APIs such as https://github.com/resilience4j/resilience4j, whilst
+many app frameworks support these features as well, e.g. virt.x https://vertx.io/docs/vertx-circuit-breaker/java/
 
 Performance/Cache could be implemented in a few other ways, e.g.:
    * In process/JVM based cache that sits with microservice (e.g. Guava or its replacement Caffeine, or just a good old HashMap)
@@ -362,17 +362,17 @@ Make sure good principles of sw design applied. KISS, DRY, YAGNI, SoC, SOLID.
 
 Lets model things around the domain.
 
-This is a search application, we can search by name or number, so need a `Name` and `Number` class to represent these. 
+   * This is a search application, we can search by name or number, so need a `Name` and `Number` interface to represent these
+   * A _factory_ (possibly via a _factory method_?) will be required to create concrete instances from user provided String 
+   * We will need to validate these, so some sort of _validator_ will be needed, a `NameValidator` and `NumberValidator`, obtained via a `ValidatorFactory`
+   * A name or number may be able to validate itself if its improves the design, be careful not to break the 'O' of SOLID though, and inject a relevant validator in 
+   * We should have something to represent our search request, a `DirectoryLookupRequest`, it wil have a handle on a (validated) `Name` or `Number`
+   * Send `DirectoryLookupRequest` to something that is going to help execute the query and return a result (via callback): a `DirectoryLookup` (add 'Service' onto end?)
+   * We'll get back a `DirectoryLookupResponse`, it will have references to `Name`'s and `Number`'s, or something representing an error
+   * We'll need something to _proxy_ the external service, a `ExternalDirectoryLookup`, it will need to consider itself as a _singleton_ to ensure only one connection opened
+   * TODO - continue....
 
-We need to be able to create these from a string (provided by user), could be via a _factory method_  
 
-and get back one or more results that contains a name and number.
-
-|Class|Responsibility|
-|---|---|
-|||
-|||
-|||
 
 
  
