@@ -355,9 +355,19 @@ Some good things (from my direct experience):
    * Declarative deployment - encapsulated upgrade and rollback process -  I love this, as makes deployment super simple, and easy to change strategy (rolling, blue/green, canary)
 
 ## System Diagram
+One possible design open for discussion:
+   * use _nxingx_ to handle availability & resiliency concerns, note we only have a single instance of
+     microservice so no requirement to load balance
+   * `/healthcheck` end-point on microservice used by nginx
+   * nxingx also handles caching to improve performance (and resiliency to failure)
+   * single _vert.x_ instance of the microserice which exposes (RESTful) search endpoints and owns connection to external service
+   * _prometheus_ ingests data from `/metrics` end-point on microservice and stores them in its timeseries database
+   * _grafana_ provides analytics and monitoring on top of prometheus
+   * missing log aggregation app like `fluentd`, consider adding to stream logs from nginx and virt.x 
+   
 ![](cloud_design.png)
 
-(derived off AWS draw.io library)
+(derived from AWS draw.io library)
 
 # Class design/OO
 Make sure good principles of sw design applied. KISS, DRY, YAGNI, SoC, SOLID.
