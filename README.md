@@ -22,6 +22,7 @@
 # Initial thoughts on the problem
 Some initial thoughts, literally, in no particular order
    * We have a single point of failure and serialized access to an external service
+   * What happens when the machine where the external service is running fails?  
    * If connection fails we need to bring it up again, quick
    * Consider cache to reduce load on service and improve performance
    * Getting a very fast reply does not seem important - we are not talking ms timings here
@@ -40,8 +41,9 @@ Questions I'd take to relevant stakeholders
    * See next section for more questions around functionality
 
 ## Third Party Service
+   * Seriously discuss getting additonal connection(s) to external services running on different hosts, different data centres, even different regions. We need better resiliency to failures on their end otherwise our clients are going to be hit hard as service availability degrades/vanishes 
+   * At a minimum, can we get a failover URI, and would it be hot
    * What SLA is in place with third party service? This will constrain our SLA
-   * Can we get a failover URI, and would it be hot
    * Need more details on API, is there a client lib for example
 
 ## Runtime environment
