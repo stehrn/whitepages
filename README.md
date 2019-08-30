@@ -355,7 +355,9 @@ Some good things (from my direct experience):
    * Declarative deployment - encapsulated upgrade and rollback process -  I love this, as makes deployment super simple, and easy to change strategy (rolling, blue/green, canary)
 
 ## System Diagram
-TODO
+![](cloud_design.png)
+
+(derived off AWS draw.io library)
 
 # Class design/OO
 Make sure good principles of sw design applied. KISS, DRY, YAGNI, SoC, SOLID.
@@ -367,9 +369,10 @@ Lets model things around the domain.
    * We will need to validate these, so some sort of _validator_ will be needed, a `NameValidator` and `NumberValidator`, obtained via a `ValidatorFactory`
    * A name or number may be able to validate itself if its improves the design, be careful not to break the 'O' of SOLID though, and inject a relevant validator in 
    * We should have something to represent our search request, a `DirectoryLookupRequest`, it wil have a handle on a (validated) `Name` or `Number`
-   * Send `DirectoryLookupRequest` to something that is going to help execute the query and return a result (via callback): a `DirectoryLookup` (add 'Service' onto end?)
+   * Send `DirectoryLookupRequest` to something that is going to help execute the query and return a result (via callback): a `DirectoryLookup` 
    * We'll get back a `DirectoryLookupResponse`, it will have references to `Name`'s and `Number`'s, or something representing an error
    * We'll need something to _proxy_ the external service, a `ExternalDirectoryLookup`, it will need to consider itself as a _singleton_ to ensure only one connection opened
+   * A `DirectoryLookup` will need to have a ref to the `ExternalDirectoryLookup`
    * TODO - continue....
 
 
