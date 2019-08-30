@@ -322,7 +322,7 @@ I've picked nginx here, there are alternatives (e.g. Apache, Jetty), everything 
 
 ### Other approaches
 Availability and Resiliency patterns can be implemented in code via Java APIs such as https://github.com/resilience4j/resilience4j, whilst
-many app frameworks support these features as well, e.g. virt.x https://vertx.io/docs/vertx-circuit-breaker/java/
+many app frameworks support these features as well, e.g. vert.x https://vertx.io/docs/vertx-circuit-breaker/java/
 
 Performance/Cache could be implemented in a few other ways, e.g.:
    * In process/JVM based cache that sits with microservice (e.g. Guava or its replacement Caffeine, or just a good old HashMap)
@@ -357,13 +357,13 @@ Some good things (from my direct experience):
 ## System Diagram
 One possible design open for discussion:
    * use _nxingx_ to handle availability & resiliency concerns, note we only have a single instance of
-     microservice so no requirement to load balance
-   * `/healthcheck` end-point on microservice used by nginx
+     microservice so no load balancing
    * nxingx also handles caching to improve performance (and resiliency to failure)
    * single _vert.x_ instance of the microserice which exposes (RESTful) search endpoints and owns connection to external service
+   * some sort of orchestration needed to ensure healthy instance of microservice is always available - `/healthcheck` end-point can be used to determine this; this is sort of thing a container-orchestration system like kubernetes does out the tin
    * _prometheus_ ingests data from `/metrics` end-point on microservice and stores them in its timeseries database
    * _grafana_ provides analytics and monitoring on top of prometheus
-   * missing log aggregation app like `fluentd`, consider adding to stream logs from nginx and virt.x 
+   * consider adding log aggregation app like `fluentd` to stream logs from nginx and vert.x 
    
 ![](cloud_design.png)
 
