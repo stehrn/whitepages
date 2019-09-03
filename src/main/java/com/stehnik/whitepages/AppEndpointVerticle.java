@@ -13,7 +13,14 @@ import io.vertx.ext.web.api.RequestParameters;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
-public class WhitepagesVerticle extends AbstractVerticle {
+/**
+ * AppEndpointVerticle is responsible to creating a web server and handling incoming requests.
+ *
+ * It communicates with the external service via a ServiceProxy.
+ *
+ * @author Nik Stehr
+ */
+public class AppEndpointVerticle extends AbstractVerticle {
 
     private ExternalService externalService;
     private HttpServer server;

@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
-public class WhitepagesVerticleIntegrationTest {
+public class AppEndpointVerticleIntegrationTest {
 
     private Vertx vertx;
 

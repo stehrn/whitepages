@@ -17,7 +17,7 @@ public class Main {
         public void start(Future<Void> startFuture) {
             vertx.rxDeployVerticle(ExternalServiceVerticle.class.getName())
                     .toCompletable()
-                    .andThen(vertx.rxDeployVerticle(WhitepagesVerticle.class.getName()))
+                    .andThen(vertx.rxDeployVerticle(AppEndpointVerticle.class.getName()))
                     .toCompletable()
                     .subscribe(startFuture::complete, startFuture::fail);
         }
