@@ -22,6 +22,7 @@
 # Initial thoughts on the problem
 Some initial thoughts, literally, in no particular order
    * We have a single point of failure and serialized access to an external service
+   * What happens when the machine where the external service is running fails?  
    * If connection fails we need to bring it up again, quick
    * Consider cache to reduce load on service and improve performance
    * Getting a very fast reply does not seem important - we are not talking ms timings here
@@ -40,8 +41,9 @@ Questions I'd take to relevant stakeholders
    * See next section for more questions around functionality
 
 ## Third Party Service
+   * Seriously discuss getting additonal connection(s) to external services running on different hosts, different data centres, even different regions. We need better resiliency to failures on their end otherwise our clients are going to be hit hard as service availability degrades/vanishes 
+   * At a minimum, can we get a failover URI, and would it be hot
    * What SLA is in place with third party service? This will constrain our SLA
-   * Can we get a failover URI, and would it be hot
    * Need more details on API, is there a client lib for example
 
 ## Runtime environment
@@ -322,7 +324,7 @@ I've picked nginx here, there are alternatives (e.g. Apache, Jetty), everything 
 
 ### Other approaches
 Availability and Resiliency patterns can be implemented in code via Java APIs such as https://github.com/resilience4j/resilience4j, whilst
-many app frameworks support these features as well, e.g. virt.x https://vertx.io/docs/vertx-circuit-breaker/java/
+many app frameworks support these features as well, e.g. vert.x https://vertx.io/docs/vertx-circuit-breaker/java/
 
 Performance/Cache could be implemented in a few other ways, e.g.:
    * In process/JVM based cache that sits with microservice (e.g. Guava or its replacement Caffeine, or just a good old HashMap)
@@ -357,13 +359,13 @@ Some good things (from my direct experience):
 ## System Diagram
 One possible design open for discussion:
    * use _nxingx_ to handle availability & resiliency concerns, note we only have a single instance of
-     microservice so no requirement to load balance
-   * `/healthcheck` end-point on microservice used by nginx
+     microservice so no load balancing
    * nxingx also handles caching to improve performance (and resiliency to failure)
    * single _vert.x_ instance of the microserice which exposes (RESTful) search endpoints and owns connection to external service
+   * some sort of orchestration needed to ensure healthy instance of microservice is always available - `/healthcheck` end-point can be used to determine this; this is sort of thing a container-orchestration system like kubernetes does out the tin
    * _prometheus_ ingests data from `/metrics` end-point on microservice and stores them in its timeseries database
    * _grafana_ provides analytics and monitoring on top of prometheus
-   * missing log aggregation app like `fluentd`, consider adding to stream logs from nginx and virt.x 
+   * consider adding log aggregation app like `fluentd` to stream logs from nginx and vert.x 
    
 ![](cloud_design.png)
 
