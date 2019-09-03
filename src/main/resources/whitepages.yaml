@@ -1,0 +1,65 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Whitepagtes Service
+  license:
+    name: MIT
+servers:
+  - url: http://whitepages.swagger.io/v1
+paths:
+  /whitepages/names/{name}:
+    get:
+      summary: Number for a specific person
+      operationId: showNumberByName
+      tags:
+        - pets
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: The name of the person to retrieve number for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Match:
+      type: object
+      required:
+        - number
+        - name
+      properties:
+        number:
+          type: string
+          format: string
+        name:
+          type: string
+        tag:
+          type: string
+    Matches:
+      type: array
+      items:
+        $ref: "#/components/schemas/Match"
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
