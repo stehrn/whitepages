@@ -31,3 +31,9 @@ The [AppEndpointVerticle](src/main/java/com/stehnik/whitepages/AppEndpointVertic
   ExternalService externalService = ExternalService.createProxy(vertx, ExternalService.SERVICE_ADDRESS);
 ```
 
+# Metrics
+Prometheus metrics added using vert.x Metrics Service Provider Interface (SPI) , [vertx-micrometer-metrics](https://vertx.io/docs/vertx-micrometer-metrics/java/)
+Run Main and view at:
+```
+http://localhost:8080/metrics
+```

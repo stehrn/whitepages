@@ -8,9 +8,12 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.RequestParameters;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.micrometer.PrometheusScrapingHandler;
 import io.vertx.serviceproxy.ServiceException;
 
 /**
@@ -22,11 +25,14 @@ import io.vertx.serviceproxy.ServiceException;
  */
 public class AppEndpointVerticle extends AbstractVerticle {
 
+    private static final Logger log = LoggerFactory.getLogger(AppEndpointVerticle.class);
+
     private ExternalService externalService;
     private HttpServer server;
 
     @Override
     public void init(Vertx vertx, Context context) {
+        log.info("Initialising " + getClass().getSimpleName());
         super.init(vertx, context);
         externalService = ExternalService.createProxy(vertx, ExternalService.SERVICE_ADDRESS);
     }
@@ -36,13 +42,12 @@ public class AppEndpointVerticle extends AbstractVerticle {
         OpenAPI3RouterFactory.create(this.vertx, "whitepages.yaml", ar -> {
             if (ar.succeeded()) {
                 Router router = generateRouter(ar.result());
-
                 server = vertx.createHttpServer(
-                        new HttpServerOptions().setPort(config().getInteger("http.port", 8080)).setHost("localhost"));
+                        new HttpServerOptions()
+                                .setPort(config().getInteger("http.port", 8080))
+                                .setHost("localhost"));
                 server.requestHandler(router).listen();
-
                 future.complete(); // end of start
-
             } else {
                 future.fail(ar.cause()); // something went wrong during router factory initialization
             }
@@ -54,11 +59,18 @@ public class AppEndpointVerticle extends AbstractVerticle {
         this.server.close();
     }
 
-    private OpenAPI3RouterFactory addRouteHandlers(OpenAPI3RouterFactory routerFactory) {
+    private Router generateRouter(OpenAPI3RouterFactory routerFactory) {
+        addExternalServiceHandlers(routerFactory);
+        Router router = routerFactory.getRouter();
+        router.route("/metrics").handler(PrometheusScrapingHandler.create());
+        ErrorHandler.create(router);
+        return router;
+    }
+
+    private OpenAPI3RouterFactory addExternalServiceHandlers(OpenAPI3RouterFactory routerFactory) {
         routerFactory.addHandlerByOperationId("showNumberByName", routingContext -> {
             RequestParameters params = routingContext.get("parsedParameters");
             String name = params.pathParameter("name").getString();
-
             externalService.findByName(name, event -> {
                 if (event.succeeded()) {
                     JsonObject result = event.result();
@@ -85,24 +97,26 @@ public class AppEndpointVerticle extends AbstractVerticle {
         return routerFactory;
     }
 
-    private Router generateRouter(OpenAPI3RouterFactory routerFactory) {
-        addRouteHandlers(routerFactory);
-        Router router = routerFactory.getRouter();
-        addErrorHandler(router, 404, "Not Found");
-        addErrorHandler(router, 400, "Validation Exception");
-        return router;
+    private static class ErrorHandler {
+
+        static void create(Router router) {
+            addErrorHandler(router, 404, "Not Found");
+            addErrorHandler(router, 400, "Validation Exception");
+        }
+
+        private static void addErrorHandler(Router router, int code, String message) {
+            router.errorHandler(code, routingContext -> {
+                JsonObject errorObject = new JsonObject()
+                        .put("code", code)
+                        .put("message", (routingContext.failure() != null) ? routingContext.failure().getMessage() : message);
+                routingContext
+                        .response()
+                        .setStatusCode(code)
+                        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .end(errorObject.encode());
+            });
+        }
     }
 
-    private void addErrorHandler(Router router, int code, String message) {
-        router.errorHandler(code, routingContext -> {
-            JsonObject errorObject = new JsonObject()
-                    .put("code", code)
-                    .put("message", (routingContext.failure() != null) ? routingContext.failure().getMessage() : message);
-            routingContext
-                    .response()
-                    .setStatusCode(code)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(errorObject.encode());
-        });
-    }
+
 }

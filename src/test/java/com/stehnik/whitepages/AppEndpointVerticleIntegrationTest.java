@@ -1,6 +1,8 @@
 package com.stehnik.whitepages;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -16,7 +18,9 @@ public class AppEndpointVerticleIntegrationTest {
 
     @Before
     public void setup(TestContext testContext) {
-        vertx = Vertx.vertx();
+        VertxOptions options = Main.beforeStartingVertx(new VertxOptions());
+        vertx = Vertx.vertx(options);
+        // TODO: figure out how to leverage Main startup
         vertx.deployVerticle(ExternalServiceVerticleForTest.class.getName(), testContext.asyncAssertSuccess());
         vertx.deployVerticle(AppEndpointVerticle.class.getName(), testContext.asyncAssertSuccess());
     }

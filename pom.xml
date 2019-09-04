@@ -10,6 +10,7 @@
     <properties>
         <vertx.version>3.7.0</vertx.version>
         <testng.version>6.10</testng.version>
+        <micrometer.version>1.1.5</micrometer.version>
         <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
     </properties>
 
@@ -54,6 +55,15 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-circuit-breaker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-micrometer-metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>${micrometer.version}</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
