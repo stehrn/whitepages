@@ -4,7 +4,6 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +17,8 @@ public class AppEndpointVerticleIntegrationTest {
     @Before
     public void setup(TestContext testContext) {
         vertx = Vertx.vertx();
-        vertx.deployVerticle(Main.LauncherVerticle.class.getName(), testContext.asyncAssertSuccess());
+        vertx.deployVerticle(ExternalServiceVerticleForTest.class.getName(), testContext.asyncAssertSuccess());
+        vertx.deployVerticle(AppEndpointVerticle.class.getName(), testContext.asyncAssertSuccess());
     }
 
     @After
@@ -28,26 +28,21 @@ public class AppEndpointVerticleIntegrationTest {
 
     @Test
     public void givenNameWithMatchingNumber_whenShowNumberByName_thenSuccess(TestContext testContext) {
-        final Async async = testContext.async();
-        vertx.createHttpClient()
-                .getNow(8081, "localhost", "/whitepages/names/Nik", response -> {
-                    response.handler(responseBody -> {
-                        testContext.assertTrue(responseBody.toString()
-                                .equals("{\"name\":\"Nik\",\"number\":\"07976376509\"}"), "Content: " + responseBody.toString());
-                        async.complete();
-                    });
-                });
+        doTest(testContext, "/whitepages/names/Nik", "{\"name\":\"Nik\",\"number\":\"07976376509\"}");
     }
 
     @Test
     public void givenNameWithNoMatching_whenShowNumberByName_thenNameNotFoundError(TestContext testContext) {
+        doTest(testContext, "/whitepages/names/Felix", "{\"code\":404,\"message\":\"Name not found\"}");
+    }
+
+    private void doTest(TestContext testContext, String path, String expected) {
         final Async async = testContext.async();
         vertx.createHttpClient()
-                .getNow(8081, "localhost", "/whitepages/names/Felix", response -> {
+                .getNow(8080, "localhost", path, response -> {
                     response.handler(responseBody -> {
-                        System.out.println(responseBody.toJson());
                         testContext.assertTrue(responseBody.toString()
-                                .equals("{\"code\":404,\"message\":\"Name not found\"}"), "Content: " + responseBody.toString());
+                                .equals(expected), "Content: " + responseBody.toString());
                         async.complete();
                     });
                 });

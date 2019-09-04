@@ -4,6 +4,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -21,6 +22,11 @@ public interface ExternalService {
      * The address on which the service is published.
      */
     String SERVICE_ADDRESS = "service.external.whitepages";
+
+    static ExternalService createProxy(Vertx vertx, String address) {
+
+        return new ExternalServiceVertxEBProxy(vertx, address);
+    }
 
     void findByName(String name, Handler<AsyncResult<JsonObject>> resultHandler);
 }

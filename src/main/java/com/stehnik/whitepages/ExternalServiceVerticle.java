@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
+ *
  * @author Nik Stehr
  */
 public class ExternalServiceVerticle extends AbstractVerticle {
@@ -19,7 +20,11 @@ public class ExternalServiceVerticle extends AbstractVerticle {
     @Override
     public void init(Vertx vertx, Context context) {
         super.init(vertx, context);
-        externalService = new DummyExternalService();
+        externalService = createExternalService();
+    }
+
+    protected ExternalService createExternalService() {
+        return new ExternalServiceImpl();
     }
 
     @Override

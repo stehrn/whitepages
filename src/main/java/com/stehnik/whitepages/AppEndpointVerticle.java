@@ -11,11 +11,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.RequestParameters;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
+import io.vertx.serviceproxy.ServiceException;
 
 /**
  * AppEndpointVerticle is responsible to creating a web server and handling incoming requests.
- *
+ * <p/>
  * It communicates with the external service via a ServiceProxy.
  *
  * @author Nik Stehr
@@ -28,9 +28,7 @@ public class AppEndpointVerticle extends AbstractVerticle {
     @Override
     public void init(Vertx vertx, Context context) {
         super.init(vertx, context);
-        externalService = new ServiceProxyBuilder(vertx)
-                .setAddress(ExternalService.SERVICE_ADDRESS)
-                .build(ExternalService.class);
+        externalService = ExternalService.createProxy(vertx, ExternalService.SERVICE_ADDRESS);
     }
 
     @Override
@@ -40,7 +38,7 @@ public class AppEndpointVerticle extends AbstractVerticle {
                 Router router = generateRouter(ar.result());
 
                 server = vertx.createHttpServer(
-                        new HttpServerOptions().setPort(config().getInteger("http.port", 8081)).setHost("localhost"));
+                        new HttpServerOptions().setPort(config().getInteger("http.port", 8080)).setHost("localhost"));
                 server.requestHandler(router).listen();
 
                 future.complete(); // end of start
@@ -74,7 +72,13 @@ public class AppEndpointVerticle extends AbstractVerticle {
                         routingContext.fail(404, new Exception("Name not found"));
                     }
                 } else {
-                    // TODO: add error handling
+                    if (event.cause() instanceof ServiceException) {
+                        ServiceException exc = (ServiceException) event.cause();
+                        routingContext.fail(exc.failureCode(), exc);
+                    } else {
+                        // Some sort of system error (e.g. No service registered for the proxy)
+                        routingContext.fail(500, event.cause());
+                    }
                 }
             });
         });
@@ -93,11 +97,7 @@ public class AppEndpointVerticle extends AbstractVerticle {
         router.errorHandler(code, routingContext -> {
             JsonObject errorObject = new JsonObject()
                     .put("code", code)
-                    .put("message",
-                            (routingContext.failure() != null) ?
-                                    routingContext.failure().getMessage() :
-                                    message
-                    );
+                    .put("message", (routingContext.failure() != null) ? routingContext.failure().getMessage() : message);
             routingContext
                     .response()
                     .setStatusCode(code)
